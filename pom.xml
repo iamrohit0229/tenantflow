@@ -18,5 +18,6 @@
         <module>api-gateway</module>
         <module>tenant-service</module>
         <module>identity-service</module>
+        <module>billing-service</module>
     </modules>
 </project>
