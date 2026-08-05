@@ -17,5 +17,6 @@
         <module>eureka-server</module>
         <module>api-gateway</module>
         <module>tenant-service</module>
+        <module>identity-service</module>
     </modules>
 </project>
