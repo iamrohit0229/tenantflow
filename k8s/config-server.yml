@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-repo
+  namespace: tenantflow
+data:
+  eureka-server.yml: |
+    server:
+      port: 8761
+    eureka:
+      client:
+        register-with-eureka: false
+        fetch-registry: false
+
+  api-gateway.yml: |
+    server:
+      port: 8080
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-server:8761/eureka
+    spring:
+      cloud:
+        gateway:
+          routes:
+            - id: tenant-service
+              uri: lb://tenant-service
+              predicates:
+                - Path=/api/tenants/**
+            - id: identity-service
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/auth/**
+            - id: billing-service
+              uri: lb://billing-service
+              predicates:
+                - Path=/api/billing/**
+            - id: audit-service
+              uri: lb://audit-service
+              predicates:
+                - Path=/api/audit/**
+
+  tenant-service.yml: |
+    server:
+      port: 8081
+    spring:
+      datasource:
+        url: jdbc:postgresql://postgres:5432/tenantflow
+        username: postgres
+        password: postgres
+      jpa:
+        hibernate:
+          ddl-auto: update
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-server:8761/eureka
+
+  identity-service.yml: |
+    server:
+      port: 8082
+    spring:
+      datasource:
+        url: jdbc:postgresql://postgres:5432/tenantflow
+        username: postgres
+        password: postgres
+      jpa:
+        hibernate:
+          ddl-auto: update
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-server:8761/eureka
+
+  billing-service.yml: |
+    server:
+      port: 8083
+    spring:
+      datasource:
+        url: jdbc:postgresql://postgres:5432/tenantflow
+        username: postgres
+        password: postgres
+      jpa:
+        hibernate:
+          ddl-auto: update
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-server:8761/eureka
+
+  audit-service.yml: |
+    server:
+      port: 8084
+    spring:
+      data:
+        mongodb:
+          uri: mongodb://mongodb:27017/tenantflow_audit
+    eureka:
+      client:
+        service-url:
+          defaultZone: http://eureka-server:8761/eureka
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-server
+  namespace: tenantflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-server
+  template:
+    metadata:
+      labels:
+        app: config-server
+    spec:
+      containers:
+        - name: config-server
+          image: tenantflow/config-server:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8888
+          env:
+            - name: SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCHLOCATIONS
+              value: file:/config-repo
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://eureka-server:8761/eureka
+          volumeMounts:
+            - name: config-repo
+              mountPath: /config-repo
+          readinessProbe:
+            httpGet:
+              path: /application/default
+              port: 8888
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: config-repo
+          configMap:
+            name: config-repo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-server
+  namespace: tenantflow
+spec:
+  selector:
+    app: config-server
+  ports:
+    - port: 8888
+      targetPort: 8888
