@@ -1,6 +1,8 @@
 package com.tenantflow.identity.controller;
 
 import com.tenantflow.identity.dto.ApiResponse;
+import com.tenantflow.identity.dto.LoginRequest;
+import com.tenantflow.identity.dto.LoginResponse;
 import com.tenantflow.identity.dto.RegisterRequest;
 import com.tenantflow.identity.dto.UserResponse;
 import com.tenantflow.identity.service.IdentityService;
@@ -32,5 +34,17 @@ public class AuthController {
                 user
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
+            @Valid @RequestBody LoginRequest request) {
+        LoginResponse login = identityService.login(request);
+        ApiResponse<LoginResponse> response = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Login successful",
+                login
+        );
+        return ResponseEntity.ok(response);
     }
 }

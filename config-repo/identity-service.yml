@@ -14,3 +14,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
+
+# Base64-encoded HS256 key, must decode to at least 256 bits. Override via JWT_SECRET outside local dev.
+jwt:
+  secret: ${JWT_SECRET:dGVuYW50Zmxvdy1sb2NhbC1kZXYtand0LXNlY3JldC1jaGFuZ2UtbWUtaW4tcHJvZHVjdGlvbg==}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
