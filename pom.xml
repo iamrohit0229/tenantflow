@@ -13,6 +13,7 @@
     <description>Multi-tenant SaaS backend platform</description>
 
     <modules>
+        <module>common-security</module>
         <module>config-server</module>
         <module>eureka-server</module>
         <module>api-gateway</module>
